@@ -1,5 +1,3 @@
-from rapidfuzz import fuzz
-from sentence_transformers import SentenceTransformer
 import streamlit as st
 import pandas as pd
 
@@ -12,7 +10,7 @@ st.set_page_config(
 # Load data
 @st.cache_data
 def load_data():
-    df = pd.read_csv("data/Staff Areas of Expertise and Interest Survey (Responses).csv")
+    df = pd.read_csv("Staff Areas of Expertise and Interest Survey (Responses).csv")
     return df
 
 df = load_data()
@@ -38,13 +36,24 @@ search_columns = [
     'Interest 5'
 ]
 
-df["combined_text"] = df[search_columns].fillna("").astype(str).agg(" ".join, axis=1)
+df["combined_text"] = (
+    df[search_columns]
+    .fillna("")
+    .astype(str)
+    .agg(" ".join, axis=1)
+)
 
 # Search bar
-query = st.text_input("Search expertise or research interests")
+query = st.text_input(
+    "Search expertise or research interests"
+)
 
 # Department filter
-departments = df["Department "].dropna().unique()
+departments = (
+    df["Department "]
+    .dropna()
+    .unique()
+)
 
 selected_department = st.selectbox(
     "Filter by Department",
@@ -61,7 +70,8 @@ if selected_department != "All":
 
 if query:
     filtered_df = filtered_df[
-        filtered_df["combined_text"].str.contains(
+        filtered_df["combined_text"]
+        .str.contains(
             query,
             case=False,
             na=False
@@ -69,7 +79,9 @@ if query:
     ]
 
 # Results
-st.subheader(f"Found {len(filtered_df)} supervisors")
+st.subheader(
+    f"Found {len(filtered_df)} supervisors"
+)
 
 for _, row in filtered_df.iterrows():
 
@@ -77,19 +89,29 @@ for _, row in filtered_df.iterrows():
 
         st.markdown(f"## {row['Name:']}")
 
-        st.write(f"**Department:** {row['Department ']}")
+        st.write(
+            f"**Department:** {row['Department ']}"
+        )
 
         expertise = []
 
         for i in range(1, 6):
-            col = f'Expertise {i}' if i > 1 else 'Expertise 1 '
+
+            col = (
+                f'Expertise {i}'
+                if i > 1
+                else 'Expertise 1 '
+            )
+
             if col in row and pd.notna(row[col]):
                 expertise.append(row[col])
 
         interests = []
 
         for i in range(1, 6):
+
             col = f'Interest {i}'
+
             if col in row and pd.notna(row[col]):
                 interests.append(row[col])
 
@@ -100,6 +122,7 @@ for _, row in filtered_df.iterrows():
         st.write(", ".join(interests))
 
         if pd.notna(row["Supervisor directory"]):
+
             st.link_button(
                 "View IIUM Directory",
                 row["Supervisor directory"]
