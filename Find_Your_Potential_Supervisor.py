@@ -16,7 +16,7 @@ def load_data():
 df = load_data()
 
 # Title
-st.title("INHART Postgraduate Supervisor Search Engine")
+st.title("Find Your Potential Supervisor")
 
 st.write(
     "Search supervisors based on expertise and research interests."
