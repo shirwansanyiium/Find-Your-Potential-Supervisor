@@ -7,14 +7,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Load data
-@st.cache_data
-def load_data():
-    df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQYlWSjqnOMP4TjrMBhMeKKluptH6qUzXKt9FIe7U_bi-onh70Fp55n1jcuMWSNlHChzW0OkybKgjkP/pub?output=csv")
-    return df
-
-df = load_data()
-
 # Title
 st.title("Find Your Potential INHART Supervisor")
 
@@ -38,6 +30,14 @@ st.write(
 )
 
 st.markdown("---")
+
+# Load data
+@st.cache_data
+def load_data():
+    df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQYlWSjqnOMP4TjrMBhMeKKluptH6qUzXKt9FIe7U_bi-onh70Fp55n1jcuMWSNlHChzW0OkybKgjkP/pub?output=csv")
+    return df
+
+df = load_data()
 
 # Combine searchable text
 search_columns = [
