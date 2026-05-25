@@ -1,3 +1,17 @@
+Here is the FULL UPDATED code with ALL fixes integrated together:
+• Google Sheets loading
+• duplicate supervisor merging
+• `name:` + `supervisor_name` support
+• remove `nan`
+• combine repeated expertise/interests
+• safer loading
+• cleaner display
+• sidebar filtering
+• IIUM directory button support
+
+
+
+```python
 import streamlit as st
 import pandas as pd
 
@@ -65,7 +79,7 @@ def load_data():
 
 df = load_data()
 
-# Stop app if dataframe is empty
+# Stop app if dataframe empty
 if df.empty:
 
     st.stop()
@@ -86,127 +100,189 @@ df.columns = (
 df = df.dropna(how="all")
 
 # ==================================================
-# REQUIRED COLUMNS
-# ==================================================
-required_columns = [
-    "name:",
-    "department"
-]
-
-for col in required_columns:
-
-    if col not in df.columns:
-
-        st.error(f"Missing required column: {col}")
-        st.stop()
-
-# ==================================================
 # FILL MISSING VALUES
 # ==================================================
 df = df.fillna("")
+
+# ==================================================
+# CREATE FINAL NAME COLUMN
+# ==================================================
+df["final_name"] = ""
+
+for idx, row in df.iterrows():
+
+    primary_name = ""
+
+    secondary_name = ""
+
+    # ----------------------------------------------
+    # NAME:
+    # ----------------------------------------------
+    if "name:" in df.columns:
+
+        primary_name = str(
+            row["name:"]
+        ).strip()
+
+    # ----------------------------------------------
+    # SUPERVISOR_NAME
+    # ----------------------------------------------
+    if "supervisor_name" in df.columns:
+
+        secondary_name = str(
+            row["supervisor_name"]
+        ).strip()
+
+    # Remove nan
+    if primary_name.lower() == "nan":
+        primary_name = ""
+
+    if secondary_name.lower() == "nan":
+        secondary_name = ""
+
+    # Priority
+    if primary_name != "":
+
+        df.at[idx, "final_name"] = primary_name
+
+    elif secondary_name != "":
+
+        df.at[idx, "final_name"] = secondary_name
+
+# Remove empty names
+df = df[
+    df["final_name"].str.strip() != ""
+]
 
 # ==================================================
 # COMBINE DUPLICATE SUPERVISORS
 # ==================================================
 grouped_rows = []
 
-# Group by supervisor name
-grouped = df.groupby("name:")
+grouped = df.groupby("final_name")
 
 for supervisor_name, group in grouped:
 
     combined_row = {}
 
-    # Keep supervisor name
-    combined_row["name:"] = supervisor_name
+    # ==============================================
+    # NAME
+    # ==============================================
+    combined_row["final_name"] = supervisor_name
 
-    # Keep first department
+    # ==============================================
+    # DEPARTMENT
+    # ==============================================
+    departments = []
+
     if "department" in group.columns:
 
-        departments = (
-            group["department"]
-            .astype(str)
-            .str.strip()
-            .unique()
-        )
+        for value in group["department"]:
 
-        departments = [
-            d for d in departments
-            if d != ""
-        ]
+            value = str(value).strip()
 
-        combined_row["department"] = ", ".join(departments)
+            if (
+                value != ""
+                and value.lower() != "nan"
+                and value not in departments
+            ):
 
-    # ==================================================
+                departments.append(value)
+
+    combined_row["department"] = ", ".join(departments)
+
+    # ==============================================
     # COMBINE EXPERTISE
-    # ==================================================
+    # ==============================================
     expertise_set = set()
 
-    for i in range(1, 6):
+    for col in group.columns:
 
-        col = f"expertise_{i}"
-
-        if col in group.columns:
+        if "expertise_" in col:
 
             for value in group[col]:
 
                 value = str(value).strip()
 
-                if value != "":
+                if (
+                    value != ""
+                    and value.lower() != "nan"
+                ):
+
                     expertise_set.add(value)
 
-    expertise_list = sorted(list(expertise_set))
+    expertise_list = sorted(
+        list(expertise_set)
+    )
 
-    # Store expertise into columns
-    for idx, value in enumerate(expertise_list[:20], start=1):
+    for idx2, value in enumerate(
+        expertise_list,
+        start=1
+    ):
 
-        combined_row[f"expertise_{idx}"] = value
+        combined_row[
+            f"expertise_{idx2}"
+        ] = value
 
-    # ==================================================
-    # COMBINE INTERESTS
-    # ==================================================
+    # ==============================================
+    # COMBINE RESEARCH INTERESTS
+    # ==============================================
     interest_set = set()
 
-    for i in range(1, 6):
+    for col in group.columns:
 
-        col = f"interest_{i}"
-
-        if col in group.columns:
+        if "interest_" in col:
 
             for value in group[col]:
 
                 value = str(value).strip()
 
-                if value != "":
+                if (
+                    value != ""
+                    and value.lower() != "nan"
+                ):
+
                     interest_set.add(value)
 
-    interest_list = sorted(list(interest_set))
+    interest_list = sorted(
+        list(interest_set)
+    )
 
-    # Store interests into columns
-    for idx, value in enumerate(interest_list[:20], start=1):
+    for idx2, value in enumerate(
+        interest_list,
+        start=1
+    ):
 
-        combined_row[f"interest_{idx}"] = value
+        combined_row[
+            f"interest_{idx2}"
+        ] = value
 
-    # ==================================================
+    # ==============================================
     # SUPERVISOR DIRECTORY
-    # ==================================================
+    # ==============================================
     if "supervisor_directory" in group.columns:
 
-        directories = (
-            group["supervisor_directory"]
-            .astype(str)
-            .str.strip()
-            .unique()
-        )
+        directories = []
 
-        directories = [
-            d for d in directories
-            if d != ""
-        ]
+        for value in group[
+            "supervisor_directory"
+        ]:
+
+            value = str(value).strip()
+
+            if (
+                value != ""
+                and value.lower() != "nan"
+                and value not in directories
+            ):
+
+                directories.append(value)
 
         if len(directories) > 0:
 
-            combined_row["supervisor_directory"] = directories[0]
+            combined_row[
+                "supervisor_directory"
+            ] = directories[0]
 
     grouped_rows.append(combined_row)
 
@@ -305,7 +381,7 @@ for _, row in filtered_df.iterrows():
         # NAME
         # ==========================================
         st.markdown(
-            f"## {row['name:']}"
+            f"## {row['final_name']}"
         )
 
         # ==========================================
@@ -349,6 +425,7 @@ for _, row in filtered_df.iterrows():
             st.write(
                 "No expertise information available."
             )
+
         # ==========================================
         # RESEARCH INTERESTS
         # ==========================================
@@ -383,6 +460,7 @@ for _, row in filtered_df.iterrows():
             st.write(
                 "No research interest information available."
             )
+
         # ==========================================
         # IIUM DIRECTORY
         # ==========================================
@@ -395,3 +473,4 @@ for _, row in filtered_df.iterrows():
                 "View IIUM Directory",
                 row["supervisor_directory"]
             )
+```
