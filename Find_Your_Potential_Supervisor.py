@@ -41,17 +41,37 @@ st.markdown("---")
 # ==================================================
 # LOAD DATA
 # ==================================================
+# ==================================================
+# LOAD DATA
+# ==================================================
 @st.cache_data
 def load_data():
 
     url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYlWSjqnOMP4TjrMBhMeKKluptH6qUzXKt9FIe7U_bi-onh70Fp55n1jcuMWSNlHChzW0OkybKgjkP/pub?output=csv"
 
-    df = pd.read_csv(url)
+    try:
 
-    return df
+        df = pd.read_csv(url)
+
+        return df
+
+    except Exception as e:
+
+        st.error(
+            "Failed to load Google Sheets data."
+        )
+
+        st.exception(e)
+
+        return pd.DataFrame()
 
 
 df = load_data()
+
+# Stop app if dataframe is empty
+if df.empty:
+
+    st.stop()
 
 # ==================================================
 # CLEAN COLUMN NAMES
