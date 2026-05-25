@@ -3,7 +3,7 @@ import pandas as pd
 
 # Page config
 st.set_page_config(
-    page_title="INHART Supervisor Search Engine",
+    page_title="Find Your Potential Supervisor",
     layout="wide"
 )
 
