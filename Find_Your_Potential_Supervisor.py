@@ -25,12 +25,6 @@ st.link_button(
 
 st.markdown("---")
 
-st.write(
-    "Search supervisors based on expertise and research interests."
-)
-
-st.markdown("---")
-
 # Load data
 @st.cache_data
 def load_data():
