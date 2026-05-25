@@ -22,6 +22,23 @@ st.write(
     "Search supervisors based on expertise and research interests."
 )
 
+st.markdown("---")
+
+st.markdown(
+    """
+    ### Supervisor Information Update
+    
+    INHART supervisors may update their expertise and research interests using the form below.
+    """
+)
+
+st.link_button(
+    "Fill Up Supervisor Expertise Form",
+    "https://docs.google.com/forms/d/148KXHWU2hAPn9BekIg58ojnNVTDr2cmKFBp8hqxgHSE/edit?ts=69e5c91a"
+)
+
+st.markdown("---")
+
 # Combine searchable text
 search_columns = [
     'Expertise 1 ',
