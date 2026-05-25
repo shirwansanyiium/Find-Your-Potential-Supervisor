@@ -91,23 +91,52 @@ df = df.dropna(how="all")
 df = df.fillna("")
 
 # ==================================================
-# VALID COLUMNS ONLY
+# DETECT VALID EXPERTISE COLUMNS
 # ==================================================
-valid_expertise_columns = [
-    "expertise_1",
-    "expertise_2",
-    "expertise_3",
-    "expertise_4",
-    "expertise_5"
-]
+valid_expertise_columns = []
 
-valid_interest_columns = [
-    "interest_1",
-    "interest_2",
-    "interest_3",
-    "interest_4",
-    "interest_5"
-]
+for col in df.columns:
+
+    if "expertise" in col:
+
+        excluded_keywords = [
+            "level",
+            "liker",
+            "please_rate"
+        ]
+
+        is_excluded = any(
+            keyword in col
+            for keyword in excluded_keywords
+        )
+
+        if not is_excluded:
+
+            valid_expertise_columns.append(col)
+
+# ==================================================
+# DETECT VALID INTEREST COLUMNS
+# ==================================================
+valid_interest_columns = []
+
+for col in df.columns:
+
+    if "interest" in col:
+
+        excluded_keywords = [
+            "level",
+            "liker",
+            "please_rate"
+        ]
+
+        is_excluded = any(
+            keyword in col
+            for keyword in excluded_keywords
+        )
+
+        if not is_excluded:
+
+            valid_interest_columns.append(col)
 
 # ==================================================
 # CREATE FINAL NAME COLUMN
@@ -130,7 +159,7 @@ for idx, row in df.iterrows():
         ).strip()
 
     # ----------------------------------------------
-    # SUPERVISOR_NAME
+    # SUPERVISOR NAME:
     # ----------------------------------------------
     if "supervisor_name:" in df.columns:
 
@@ -431,7 +460,6 @@ for _, row in filtered_df.iterrows():
 
                     expertise.append(value)
 
-        # Remove duplicates
         expertise = list(dict.fromkeys(expertise))
 
         st.write("### Expertise")
@@ -466,7 +494,6 @@ for _, row in filtered_df.iterrows():
 
                     interests.append(value)
 
-        # Remove duplicates
         interests = list(dict.fromkeys(interests))
 
         st.write("### Research Interests")
