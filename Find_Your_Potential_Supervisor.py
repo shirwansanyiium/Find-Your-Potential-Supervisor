@@ -1,3 +1,4 @@
+```python id="08aqh6"
 import streamlit as st
 import pandas as pd
 
@@ -64,48 +65,163 @@ df.columns = (
 )
 
 # ==================================================
-# OPTIONAL DEBUGGING
-# Uncomment this if you want to see all columns
+# REMOVE EMPTY ROWS
 # ==================================================
-# st.write(df.columns)
+df = df.dropna(how="all")
+
+# ==================================================
+# REQUIRED COLUMNS
+# ==================================================
+required_columns = [
+    "name:",
+    "department"
+]
+
+for col in required_columns:
+
+    if col not in df.columns:
+
+        st.error(f"Missing required column: {col}")
+        st.stop()
+
+# ==================================================
+# FILL MISSING VALUES
+# ==================================================
+df = df.fillna("")
+
+# ==================================================
+# COMBINE DUPLICATE SUPERVISORS
+# ==================================================
+grouped_rows = []
+
+# Group by supervisor name
+grouped = df.groupby("name:")
+
+for supervisor_name, group in grouped:
+
+    combined_row = {}
+
+    # Keep supervisor name
+    combined_row["name:"] = supervisor_name
+
+    # Keep first department
+    if "department" in group.columns:
+
+        departments = (
+            group["department"]
+            .astype(str)
+            .str.strip()
+            .unique()
+        )
+
+        departments = [
+            d for d in departments
+            if d != ""
+        ]
+
+        combined_row["department"] = ", ".join(departments)
+
+    # ==================================================
+    # COMBINE EXPERTISE
+    # ==================================================
+    expertise_set = set()
+
+    for i in range(1, 6):
+
+        col = f"expertise_{i}"
+
+        if col in group.columns:
+
+            for value in group[col]:
+
+                value = str(value).strip()
+
+                if value != "":
+                    expertise_set.add(value)
+
+    expertise_list = sorted(list(expertise_set))
+
+    # Store expertise into columns
+    for idx, value in enumerate(expertise_list[:20], start=1):
+
+        combined_row[f"expertise_{idx}"] = value
+
+    # ==================================================
+    # COMBINE INTERESTS
+    # ==================================================
+    interest_set = set()
+
+    for i in range(1, 6):
+
+        col = f"interest_{i}"
+
+        if col in group.columns:
+
+            for value in group[col]:
+
+                value = str(value).strip()
+
+                if value != "":
+                    interest_set.add(value)
+
+    interest_list = sorted(list(interest_set))
+
+    # Store interests into columns
+    for idx, value in enumerate(interest_list[:20], start=1):
+
+        combined_row[f"interest_{idx}"] = value
+
+    # ==================================================
+    # SUPERVISOR DIRECTORY
+    # ==================================================
+    if "supervisor_directory" in group.columns:
+
+        directories = (
+            group["supervisor_directory"]
+            .astype(str)
+            .str.strip()
+            .unique()
+        )
+
+        directories = [
+            d for d in directories
+            if d != ""
+        ]
+
+        if len(directories) > 0:
+
+            combined_row["supervisor_directory"] = directories[0]
+
+    grouped_rows.append(combined_row)
+
+# ==================================================
+# CREATE CLEAN DATAFRAME
+# ==================================================
+df = pd.DataFrame(grouped_rows)
 
 # ==================================================
 # SEARCHABLE COLUMNS
 # ==================================================
-search_columns = [
-    "expertise_1",
-    "expertise_2",
-    "expertise_3",
-    "expertise_4",
-    "expertise_5",
-    "interest_1",
-    "interest_2",
-    "interest_3",
-    "interest_4",
-    "interest_5"
-]
+search_columns = []
 
-# Keep only existing columns
-search_columns = [
-    col for col in search_columns
-    if col in df.columns
-]
+for col in df.columns:
+
+    if (
+        "expertise_" in col
+        or "interest_" in col
+    ):
+
+        search_columns.append(col)
 
 # ==================================================
 # COMBINE SEARCH TEXT
 # ==================================================
-if len(search_columns) > 0:
-
-    df["combined_text"] = (
-        df[search_columns]
-        .fillna("")
-        .astype(str)
-        .agg(" ".join, axis=1)
-    )
-
-else:
-
-    df["combined_text"] = ""
+df["combined_text"] = (
+    df[search_columns]
+    .fillna("")
+    .astype(str)
+    .agg(" ".join, axis=1)
+)
 
 # ==================================================
 # SIDEBAR SEARCH
@@ -119,22 +235,16 @@ query = st.sidebar.text_input(
 # ==================================================
 # DEPARTMENT FILTER
 # ==================================================
-if "department" in df.columns:
+departments = sorted(
+    df["department"]
+    .dropna()
+    .unique()
+)
 
-    departments = sorted(
-        df["department"]
-        .dropna()
-        .unique()
-    )
-
-    selected_department = st.sidebar.selectbox(
-        "Filter by Department",
-        ["All"] + list(departments)
-    )
-
-else:
-
-    selected_department = "All"
+selected_department = st.sidebar.selectbox(
+    "Filter by Department",
+    ["All"] + list(departments)
+)
 
 # ==================================================
 # FILTERING
@@ -142,10 +252,7 @@ else:
 filtered_df = df.copy()
 
 # Department filter
-if (
-    selected_department != "All"
-    and "department" in filtered_df.columns
-):
+if selected_department != "All":
 
     filtered_df = filtered_df[
         filtered_df["department"]
@@ -181,52 +288,37 @@ for _, row in filtered_df.iterrows():
         # ==========================================
         # NAME
         # ==========================================
-        if "name:" in row.index:
-
-            st.markdown(
-                f"## {row['name:']}"
-            )
-
-        else:
-
-            st.markdown(
-                "## Name Not Available"
-            )
+        st.markdown(
+            f"## {row['name:']}"
+        )
 
         # ==========================================
         # DEPARTMENT
         # ==========================================
-        if "department" in row.index:
-
-            st.write(
-                f"**Department:** {row['department']}"
-            )
+        st.write(
+            f"**Department:** {row['department']}"
+        )
 
         # ==========================================
         # EXPERTISE
         # ==========================================
         expertise = []
 
-        for i in range(1, 6):
+        for col in row.index:
 
-            col = f"expertise_{i}"
+            if "expertise_" in col:
 
-            if (
-                col in row.index
-                and pd.notna(row[col])
-                and str(row[col]).strip() != ""
-            ):
+                value = str(row[col]).strip()
 
-                expertise.append(
-                    str(row[col])
-                )
+                if value != "":
+                    expertise.append(value)
 
         st.write("### Expertise")
 
         if len(expertise) > 0:
 
             st.write(
-                ", ".join(expertise)
+                ", ".join(sorted(expertise))
             )
 
         else:
@@ -240,26 +332,21 @@ for _, row in filtered_df.iterrows():
         # ==========================================
         interests = []
 
-        for i in range(1, 6):
+        for col in row.index:
 
-            col = f"interest_{i}"
+            if "interest_" in col:
 
-            if (
-                col in row.index
-                and pd.notna(row[col])
-                and str(row[col]).strip() != ""
-            ):
+                value = str(row[col]).strip()
 
-                interests.append(
-                    str(row[col])
-                )
+                if value != "":
+                    interests.append(value)
 
         st.write("### Research Interests")
 
         if len(interests) > 0:
 
             st.write(
-                ", ".join(interests)
+                ", ".join(sorted(interests))
             )
 
         else:
@@ -269,16 +356,15 @@ for _, row in filtered_df.iterrows():
             )
 
         # ==========================================
-        # IIUM DIRECTORY BUTTON
+        # IIUM DIRECTORY
         # ==========================================
-        if "supervisor_directory" in row.index:
+        if (
+            "supervisor_directory" in row.index
+            and str(row["supervisor_directory"]).strip() != ""
+        ):
 
-            if (
-                pd.notna(row["supervisor_directory"])
-                and str(row["supervisor_directory"]).strip() != ""
-            ):
-
-                st.link_button(
-                    "View IIUM Directory",
-                    row["supervisor_directory"]
-                )
+            st.link_button(
+                "View IIUM Directory",
+                row["supervisor_directory"]
+            )
+```
