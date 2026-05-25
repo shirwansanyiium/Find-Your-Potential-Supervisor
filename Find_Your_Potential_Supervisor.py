@@ -346,15 +346,16 @@ df = pd.DataFrame(grouped_rows)
 # ==================================================
 # SEARCHABLE COLUMNS
 # ==================================================
-search_columns = (
-    valid_expertise_columns
-    + valid_interest_columns
-)
+search_columns = []
 
-search_columns = [
-    col for col in search_columns
-    if col in df.columns
-]
+for col in df.columns:
+
+    if (
+        col.startswith("expertise_")
+        or col.startswith("interest_")
+    ):
+
+        search_columns.append(col)
 
 # ==================================================
 # COMBINE SEARCH TEXT
