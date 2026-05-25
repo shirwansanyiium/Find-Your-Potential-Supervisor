@@ -318,62 +318,75 @@ for _, row in filtered_df.iterrows():
             f"**Department:** {row['department']}"
         )
 
-        # ==========================================
-        # EXPERTISE
-        # ==========================================
-        expertise = []
+# ==========================================
+# EXPERTISE
+# ==========================================
+expertise = []
 
-        for col in row.index:
+for col in row.index:
 
-            if "expertise_" in col:
+    if "expertise_" in col:
 
-                value = str(row[col]).strip()
+        value = str(row[col]).strip()
 
-                if value != "":
-                    expertise.append(value)
+        if (
+            value != ""
+            and value.lower() != "nan"
+        ):
 
-        st.write("### Expertise")
+            expertise.append(value)
 
-        if len(expertise) > 0:
+# Remove duplicates
+expertise = list(dict.fromkeys(expertise))
 
-            st.write(
-                ", ".join(sorted(expertise))
-            )
+st.write("### Expertise")
 
-        else:
+if len(expertise) > 0:
 
-            st.write(
-                "No expertise information available."
-            )
+    st.write(
+        ", ".join(expertise)
+    )
 
-        # ==========================================
-        # RESEARCH INTERESTS
-        # ==========================================
-        interests = []
+else:
 
-        for col in row.index:
+    st.write(
+        "No expertise information available."
+    )
 
-            if "interest_" in col:
+      # ==========================================
+# RESEARCH INTERESTS
+# ==========================================
+interests = []
 
-                value = str(row[col]).strip()
+for col in row.index:
 
-                if value != "":
-                    interests.append(value)
+    if "interest_" in col:
 
-        st.write("### Research Interests")
+        value = str(row[col]).strip()
 
-        if len(interests) > 0:
+        if (
+            value != ""
+            and value.lower() != "nan"
+        ):
 
-            st.write(
-                ", ".join(sorted(interests))
-            )
+            interests.append(value)
 
-        else:
+# Remove duplicates
+interests = list(dict.fromkeys(interests))
 
-            st.write(
-                "No research interest information available."
-            )
+st.write("### Research Interests")
 
+if len(interests) > 0:
+
+    st.write(
+        ", ".join(interests)
+    )
+
+else:
+
+    st.write(
+        "No research interest information available."
+    )
         # ==========================================
         # IIUM DIRECTORY
         # ==========================================
