@@ -3,7 +3,7 @@ import pandas as pd
 
 # Page config
 st.set_page_config(
-    page_title="Find Your Potential Supervisor",
+    page_title="Find Your Potential INHART Supervisor",
     layout="wide"
 )
 
@@ -16,7 +16,7 @@ def load_data():
 df = load_data()
 
 # Title
-st.title("Find Your Potential Supervisor")
+st.title("Find Your Potential INHART Supervisor")
 
 st.write(
     "Search supervisors based on expertise and research interests."
