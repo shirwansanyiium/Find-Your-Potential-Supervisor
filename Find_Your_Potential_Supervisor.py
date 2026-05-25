@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 
@@ -283,4 +282,3 @@ for _, row in filtered_df.iterrows():
                     "View IIUM Directory",
                     row["supervisor_directory"]
                 )
-```
