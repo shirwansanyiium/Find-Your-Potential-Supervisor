@@ -145,63 +145,42 @@ df["final_name"] = ""
 
 for idx, row in df.iterrows():
 
-    primary_name = ""
-    secondary_name = ""
-
-    # ----------------------------------------------
-    # NAME:
-    # ----------------------------------------------
-    if "name:" in df.columns:
-
-        primary_name = str(
-            row.get("name:", "")
-        ).strip()
-
-    # ----------------------------------------------
-    # SUPERVISOR NAME:
-    # ----------------------------------------------
-    if "supervisor_name:" in df.columns:
-
-        secondary_name = str(
-            row.get("supervisor_name:", "")
-        ).strip()
-
-    # ----------------------------------------------
-    # CLEAN INVALID VALUES
-    # ----------------------------------------------
-    invalid_values = [
-        "",
-        "nan",
-        "none"
-    ]
-
-    if primary_name.lower() in invalid_values:
-        primary_name = ""
-
-    if secondary_name.lower() in invalid_values:
-        secondary_name = ""
-
-    # ----------------------------------------------
-    # PRIORITY
-    # ----------------------------------------------
     final_name = ""
 
-    if primary_name != "":
+    # Try multiple possible name columns
+    possible_name_columns = [
+        "name:",
+        "name",
+        "supervisor_name:",
+        "supervisor_name"
+    ]
 
-        final_name = primary_name
+    for col in possible_name_columns:
 
-    elif secondary_name != "":
+        if col in df.columns:
 
-        final_name = secondary_name
+            value = str(
+                row.get(col, "")
+            ).strip()
 
-    # ----------------------------------------------
-    # SAVE
-    # ----------------------------------------------
+            # Ignore invalid values
+            if value.lower() not in [
+                "",
+                "nan",
+                "none"
+            ]:
+
+                final_name = value
+                break
+
+    # Save final name
     df.at[idx, "final_name"] = final_name
 
 # Remove empty names
 df = df[
-    df["final_name"].astype(str).str.strip() != ""
+    df["final_name"]
+    .astype(str)
+    .str.strip() != ""
 ]
 
 # ==================================================
