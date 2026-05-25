@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # ==================================================
-# PAGE CONFIGURATION
+# PAGE CONFIG
 # ==================================================
 st.set_page_config(
     page_title="Find Your Potential INHART Supervisor",
@@ -10,65 +10,18 @@ st.set_page_config(
 )
 
 # ==================================================
-# TITLE
-# ==================================================
-st.title("Find Your Potential INHART Supervisor")
-
-st.write(
-    "Search supervisors based on expertise and research interests."
-)
-
-st.markdown("---")
-
-# ==================================================
-# SUPERVISOR UPDATE SECTION
-# ==================================================
-st.markdown(
-    """
-    ### Supervisor Information Update
-
-    INHART supervisors may update their expertise and research interests using the form below.
-    """
-)
-
-st.link_button(
-    "Fill Up Supervisor Expertise Form",
-    "https://docs.google.com/forms/d/e/1FAIpQLSf4yW4mbvcU7wEkNtR5NzINus-WCWnBhhK-2YH-fV85D_E7Mg/viewform?usp=preview"
-)
-
-st.markdown("---")
-
-# ==================================================
 # LOAD DATA
 # ==================================================
 @st.cache_data
 def load_data():
 
-    url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYlWSjqnOMP4TjrMBhMeKKluptH6qUzXKt9FIe7U_bi-onh70Fp55n1jcuMWSNlHChzW0OkybKgjkP/pub?output=csv"
+    sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYlWSjqnOMP4TjrMBhMeKKluptH6qUzXKt9FIe7U_bi-onh70Fp55n1jcuMWSNlHChzW0OkybKgjkP/pub?output=csv"
 
-    try:
+    df = pd.read_csv(sheet_url)
 
-        df = pd.read_csv(url)
-
-        return df
-
-    except Exception as e:
-
-        st.error(
-            "Failed to load Google Sheets data."
-        )
-
-        st.exception(e)
-
-        return pd.DataFrame()
-
+    return df
 
 df = load_data()
-
-# Stop app if dataframe empty
-if df.empty:
-
-    st.stop()
 
 # ==================================================
 # CLEAN COLUMN NAMES
@@ -81,64 +34,6 @@ df.columns = (
 )
 
 # ==================================================
-# REMOVE EMPTY ROWS
-# ==================================================
-df = df.dropna(how="all")
-
-# ==================================================
-# FILL MISSING VALUES
-# ==================================================
-df = df.fillna("")
-
-# ==================================================
-# DETECT VALID EXPERTISE COLUMNS
-# ==================================================
-valid_expertise_columns = []
-
-for col in df.columns:
-
-    if "expertise" in col:
-
-        excluded_keywords = [
-            "level",
-            "liker",
-            "please_rate"
-        ]
-
-        is_excluded = any(
-            keyword in col
-            for keyword in excluded_keywords
-        )
-
-        if not is_excluded:
-
-            valid_expertise_columns.append(col)
-
-# ==================================================
-# DETECT VALID INTEREST COLUMNS
-# ==================================================
-valid_interest_columns = []
-
-for col in df.columns:
-
-    if "interest" in col:
-
-        excluded_keywords = [
-            "level",
-            "liker",
-            "please_rate"
-        ]
-
-        is_excluded = any(
-            keyword in col
-            for keyword in excluded_keywords
-        )
-
-        if not is_excluded:
-
-            valid_interest_columns.append(col)
-
-# ==================================================
 # CREATE FINAL NAME COLUMN
 # ==================================================
 df["final_name"] = ""
@@ -147,7 +42,6 @@ for idx, row in df.iterrows():
 
     final_name = ""
 
-    # Try multiple possible name columns
     possible_name_columns = [
         "name:",
         "name",
@@ -163,7 +57,6 @@ for idx, row in df.iterrows():
                 row.get(col, "")
             ).strip()
 
-            # Ignore invalid values
             if value.lower() not in [
                 "",
                 "nan",
@@ -173,7 +66,6 @@ for idx, row in df.iterrows():
                 final_name = value
                 break
 
-    # Save final name
     df.at[idx, "final_name"] = final_name
 
 # Remove empty names
@@ -184,141 +76,216 @@ df = df[
 ]
 
 # ==================================================
-# COMBINE DUPLICATE SUPERVISORS
+# DEPARTMENT COLUMN
 # ==================================================
-grouped_rows = []
+department_column = ""
 
-grouped = df.groupby("final_name")
+possible_department_columns = [
+    "department",
+    "department:"
+]
 
-for supervisor_name, group in grouped:
+for col in possible_department_columns:
 
-    combined_row = {}
+    if col in df.columns:
 
-    # ==============================================
+        department_column = col
+        break
+
+# ==================================================
+# DIRECTORY COLUMN
+# ==================================================
+directory_column = ""
+
+possible_directory_columns = [
+    "supervisor_directory",
+    "supervisor_directory:",
+    "directory"
+]
+
+for col in possible_directory_columns:
+
+    if col in df.columns:
+
+        directory_column = col
+        break
+
+# ==================================================
+# EXPERTISE COLUMNS
+# ==================================================
+valid_expertise_columns = []
+
+for col in df.columns:
+
+    if (
+        "expertise" in col
+        and "level" not in col
+    ):
+
+        valid_expertise_columns.append(col)
+
+# ==================================================
+# INTEREST COLUMNS
+# ==================================================
+valid_interest_columns = []
+
+for col in df.columns:
+
+    if (
+        "interest" in col
+        and "level" not in col
+        and "likert" not in col
+    ):
+
+        valid_interest_columns.append(col)
+
+# ==================================================
+# GROUP SAME SUPERVISOR
+# ==================================================
+grouped_data = []
+
+for supervisor_name in df["final_name"].unique():
+
+    supervisor_rows = df[
+        df["final_name"] == supervisor_name
+    ]
+
+    supervisor_dict = {}
+
+    # ----------------------------------------------
     # NAME
-    # ==============================================
-    combined_row["final_name"] = supervisor_name
+    # ----------------------------------------------
+    supervisor_dict["final_name"] = supervisor_name
 
-    # ==============================================
+    # ----------------------------------------------
     # DEPARTMENT
-    # ==============================================
-    departments = []
+    # ----------------------------------------------
+    if department_column != "":
 
-    if "department" in group.columns:
+        dept_values = (
+            supervisor_rows[department_column]
+            .dropna()
+            .astype(str)
+            .unique()
+        )
 
-        for value in group["department"]:
+        supervisor_dict["department"] = ", ".join(dept_values)
 
-            value = str(value).strip()
+    else:
 
-            if (
-                value != ""
-                and value.lower() != "nan"
-                and value not in departments
-            ):
+        supervisor_dict["department"] = ""
 
-                departments.append(value)
+    # ----------------------------------------------
+    # DIRECTORY
+    # ----------------------------------------------
+    if directory_column != "":
 
-    combined_row["department"] = ", ".join(departments)
+        dir_values = (
+            supervisor_rows[directory_column]
+            .dropna()
+            .astype(str)
+            .unique()
+        )
 
-    # ==============================================
+        if len(dir_values) > 0:
+
+            supervisor_dict["supervisor_directory"] = dir_values[0]
+
+        else:
+
+            supervisor_dict["supervisor_directory"] = ""
+
+    else:
+
+        supervisor_dict["supervisor_directory"] = ""
+
+    # ----------------------------------------------
     # COMBINE EXPERTISE
-    # ==============================================
-    expertise_set = set()
+    # ----------------------------------------------
+    all_expertise = []
 
     for col in valid_expertise_columns:
 
-        if col in group.columns:
+        if col in supervisor_rows.columns:
 
-            for value in group[col]:
+            values = (
+                supervisor_rows[col]
+                .dropna()
+                .astype(str)
+                .tolist()
+            )
 
-                value = str(value).strip()
+            for value in values:
+
+                cleaned_value = value.strip()
 
                 if (
-                    value != ""
-                    and value.lower() != "nan"
+                    cleaned_value != ""
+                    and cleaned_value.lower() != "nan"
+                    and "basic expertise" not in cleaned_value.lower()
+                    and "intermediate expertise" not in cleaned_value.lower()
+                    and "advanced expertise" not in cleaned_value.lower()
                 ):
 
-                    expertise_set.add(value)
+                    all_expertise.append(cleaned_value)
 
-    expertise_list = sorted(
-        list(expertise_set)
+    all_expertise = list(
+        dict.fromkeys(all_expertise)
     )
 
-    for idx2, value in enumerate(
-        expertise_list,
-        start=1
-    ):
+    for i, value in enumerate(all_expertise):
 
-        combined_row[
-            f"expertise_{idx2}"
+        supervisor_dict[
+            f"expertise_{i+1}"
         ] = value
 
-    # ==============================================
-    # COMBINE RESEARCH INTERESTS
-    # ==============================================
-    interest_set = set()
+    # ----------------------------------------------
+    # COMBINE INTERESTS
+    # ----------------------------------------------
+    all_interests = []
 
     for col in valid_interest_columns:
 
-        if col in group.columns:
+        if col in supervisor_rows.columns:
 
-            for value in group[col]:
+            values = (
+                supervisor_rows[col]
+                .dropna()
+                .astype(str)
+                .tolist()
+            )
 
-                value = str(value).strip()
+            for value in values:
+
+                cleaned_value = value.strip()
 
                 if (
-                    value != ""
-                    and value.lower() != "nan"
+                    cleaned_value != ""
+                    and cleaned_value.lower() != "nan"
+                    and "very interested" not in cleaned_value.lower()
+                    and "extremely interested" not in cleaned_value.lower()
+                    and "interest_level" not in cleaned_value.lower()
+                    and "likert" not in cleaned_value.lower()
                 ):
 
-                    interest_set.add(value)
+                    all_interests.append(cleaned_value)
 
-    interest_list = sorted(
-        list(interest_set)
+    all_interests = list(
+        dict.fromkeys(all_interests)
     )
 
-    for idx2, value in enumerate(
-        interest_list,
-        start=1
-    ):
+    for i, value in enumerate(all_interests):
 
-        combined_row[
-            f"interest_{idx2}"
+        supervisor_dict[
+            f"interest_{i+1}"
         ] = value
 
-    # ==============================================
-    # SUPERVISOR DIRECTORY
-    # ==============================================
-    if "supervisor_directory" in group.columns:
-
-        directories = []
-
-        for value in group[
-            "supervisor_directory"
-        ]:
-
-            value = str(value).strip()
-
-            if (
-                value != ""
-                and value.lower() != "nan"
-                and value not in directories
-            ):
-
-                directories.append(value)
-
-        if len(directories) > 0:
-
-            combined_row[
-                "supervisor_directory"
-            ] = directories[0]
-
-    grouped_rows.append(combined_row)
+    grouped_data.append(supervisor_dict)
 
 # ==================================================
-# CREATE CLEAN DATAFRAME
+# FINAL DATAFRAME
 # ==================================================
-df = pd.DataFrame(grouped_rows)
+df = pd.DataFrame(grouped_data)
 
 # ==================================================
 # SEARCHABLE COLUMNS
@@ -335,7 +302,7 @@ for col in df.columns:
         search_columns.append(col)
 
 # ==================================================
-# COMBINE SEARCH TEXT
+# CREATE SEARCH TEXT
 # ==================================================
 df["combined_text"] = (
     df[search_columns]
@@ -345,34 +312,66 @@ df["combined_text"] = (
 )
 
 # ==================================================
-# SIDEBAR SEARCH
+# SIDEBAR
 # ==================================================
-st.sidebar.header("Search & Filter")
+with st.sidebar:
 
-query = st.sidebar.text_input(
-    "Search expertise or research interests"
+    st.header("Search & Filter")
+
+    query = st.text_input(
+        "Search expertise or research interests"
+    )
+
+    departments = (
+        df["department"]
+        .dropna()
+        .unique()
+    )
+
+    selected_department = st.selectbox(
+        "Filter by Department",
+        ["All"] + list(departments)
+    )
+
+# ==================================================
+# TITLE
+# ==================================================
+st.title(
+    "Find Your Potential INHART Supervisor"
 )
 
-# ==================================================
-# DEPARTMENT FILTER
-# ==================================================
-departments = sorted(
-    df["department"]
-    .dropna()
-    .unique()
+st.write(
+    "Search supervisors based on expertise and research interests."
 )
 
-selected_department = st.sidebar.selectbox(
-    "Filter by Department",
-    ["All"] + list(departments)
+st.markdown("---")
+
+# ==================================================
+# GOOGLE FORM SECTION
+# ==================================================
+st.subheader(
+    "Supervisor Information Update"
 )
+
+st.write(
+    "INHART supervisors may update their expertise and research interests using the form below."
+)
+
+st.link_button(
+    "Fill Up Supervisor Expertise Form",
+    "https://docs.google.com/forms/d/e/1FAIpQLSf4yW4mbvcU7wEkNtR5NzINus-WCWnBhhK-2YH-fV85D_E7Mg/viewform"
+)
+
+st.markdown("---")
 
 # ==================================================
 # FILTERING
 # ==================================================
 filtered_df = df.copy()
 
-# Department filter
+# ----------------------------------------------
+# DEPARTMENT FILTER
+# ----------------------------------------------
 if selected_department != "All":
 
     filtered_df = filtered_df[
@@ -380,9 +379,9 @@ if selected_department != "All":
         == selected_department
     ]
 
-# ==================================================
+# ----------------------------------------------
 # SEARCH FILTER
-# ==================================================
+# ----------------------------------------------
 if query:
 
     query = query.strip().lower()
@@ -433,9 +432,9 @@ for _, row in filtered_df.iterrows():
         # ==========================================
         expertise = []
 
-        for col in valid_expertise_columns:
+        for col in row.index:
 
-            if col in row.index:
+            if col.startswith("expertise_"):
 
                 value = str(row[col]).strip()
 
@@ -467,9 +466,9 @@ for _, row in filtered_df.iterrows():
         # ==========================================
         interests = []
 
-        for col in valid_interest_columns:
+        for col in row.index:
 
-            if col in row.index:
+            if col.startswith("interest_"):
 
                 value = str(row[col]).strip()
 
@@ -497,7 +496,7 @@ for _, row in filtered_df.iterrows():
             )
 
         # ==========================================
-        # IIUM DIRECTORY
+        # DIRECTORY
         # ==========================================
         if (
             "supervisor_directory" in row.index
