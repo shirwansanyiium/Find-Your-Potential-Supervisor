@@ -18,12 +18,6 @@ df = load_data()
 # Title
 st.title("Find Your Potential INHART Supervisor")
 
-st.write(
-    "Search supervisors based on expertise and research interests."
-)
-
-st.markdown("---")
-
 st.markdown(
     """
     ### Supervisor Information Update
@@ -35,6 +29,12 @@ st.markdown(
 st.link_button(
     "Fill Up Supervisor Expertise Form",
     "https://docs.google.com/forms/d/148KXHWU2hAPn9BekIg58ojnNVTDr2cmKFBp8hqxgHSE/edit?ts=69e5c91a"
+)
+
+st.markdown("---")
+
+st.write(
+    "Search supervisors based on expertise and research interests."
 )
 
 st.markdown("---")
