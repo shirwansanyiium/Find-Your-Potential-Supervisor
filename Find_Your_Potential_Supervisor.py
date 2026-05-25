@@ -91,6 +91,25 @@ df = df.dropna(how="all")
 df = df.fillna("")
 
 # ==================================================
+# VALID COLUMNS ONLY
+# ==================================================
+valid_expertise_columns = [
+    "expertise_1",
+    "expertise_2",
+    "expertise_3",
+    "expertise_4",
+    "expertise_5"
+]
+
+valid_interest_columns = [
+    "interest_1",
+    "interest_2",
+    "interest_3",
+    "interest_4",
+    "interest_5"
+]
+
+# ==================================================
 # CREATE FINAL NAME COLUMN
 # ==================================================
 df["final_name"] = ""
@@ -182,9 +201,9 @@ for supervisor_name, group in grouped:
     # ==============================================
     expertise_set = set()
 
-    for col in group.columns:
+    for col in valid_expertise_columns:
 
-        if "expertise_" in col:
+        if col in group.columns:
 
             for value in group[col]:
 
@@ -215,9 +234,9 @@ for supervisor_name, group in grouped:
     # ==============================================
     interest_set = set()
 
-    for col in group.columns:
+    for col in valid_interest_columns:
 
-        if "interest_" in col:
+        if col in group.columns:
 
             for value in group[col]:
 
@@ -280,16 +299,15 @@ df = pd.DataFrame(grouped_rows)
 # ==================================================
 # SEARCHABLE COLUMNS
 # ==================================================
-search_columns = []
+search_columns = (
+    valid_expertise_columns
+    + valid_interest_columns
+)
 
-for col in df.columns:
-
-    if (
-        "expertise_" in col
-        or "interest_" in col
-    ):
-
-        search_columns.append(col)
+search_columns = [
+    col for col in search_columns
+    if col in df.columns
+]
 
 # ==================================================
 # COMBINE SEARCH TEXT
@@ -382,9 +400,9 @@ for _, row in filtered_df.iterrows():
         # ==========================================
         expertise = []
 
-        for col in row.index:
+        for col in valid_expertise_columns:
 
-            if "expertise_" in col:
+            if col in row.index:
 
                 value = str(row[col]).strip()
 
@@ -417,9 +435,9 @@ for _, row in filtered_df.iterrows():
         # ==========================================
         interests = []
 
-        for col in row.index:
+        for col in valid_interest_columns:
 
-            if "interest_" in col:
+            if col in row.index:
 
                 value = str(row[col]).strip()
 
