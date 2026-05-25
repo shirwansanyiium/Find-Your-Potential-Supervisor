@@ -1,19 +1,33 @@
+```python id="ps4y8m"
 import streamlit as st
 import pandas as pd
 
-# Page config
+# ====================================
+# PAGE CONFIGURATION
+# ====================================
 st.set_page_config(
     page_title="Find Your Potential INHART Supervisor",
     layout="wide"
 )
 
-# Title
+# ====================================
+# TITLE
+# ====================================
 st.title("Find Your Potential INHART Supervisor")
 
+st.write(
+    "Search supervisors based on expertise and research interests."
+)
+
+st.markdown("---")
+
+# ====================================
+# SUPERVISOR UPDATE SECTION
+# ====================================
 st.markdown(
     """
     ### Supervisor Information Update
-    
+
     INHART supervisors may update their expertise and research interests using the form below.
     """
 )
@@ -25,28 +39,56 @@ st.link_button(
 
 st.markdown("---")
 
-# Load data
+# ====================================
+# LOAD DATA
+# ====================================
 @st.cache_data
 def load_data():
-    df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQYlWSjqnOMP4TjrMBhMeKKluptH6qUzXKt9FIe7U_bi-onh70Fp55n1jcuMWSNlHChzW0OkybKgjkP/pub?output=csv")
+
+    url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYlWSjqnOMP4TjrMBhMeKKluptH6qUzXKt9FIe7U_bi-onh70Fp55n1jcuMWSNlHChzW0OkybKgjkP/pub?output=csv"
+
+    df = pd.read_csv(url)
+
     return df
+
 
 df = load_data()
 
-# Combine searchable text
+# ====================================
+# CLEAN COLUMN NAMES
+# ====================================
+df.columns = (
+    df.columns
+    .str.strip()
+    .str.lower()
+    .str.replace(" ", "_")
+)
+
+# ====================================
+# SEARCHABLE COLUMNS
+# ====================================
 search_columns = [
-    'Expertise 1 ',
-    'Expertise 2',
-    'Expertise 3',
-    'Expertise 4',
-    'Expertise 5',
-    'Interest 1',
-    'Interest 2',
-    'Interest 3',
-    'Interest 4',
-    'Interest 5'
+    "expertise_1",
+    "expertise_2",
+    "expertise_3",
+    "expertise_4",
+    "expertise_5",
+    "interest_1",
+    "interest_2",
+    "interest_3",
+    "interest_4",
+    "interest_5"
 ]
 
+# Keep only columns that exist
+search_columns = [
+    col for col in search_columns
+    if col in df.columns
+]
+
+# ====================================
+# COMBINE SEARCH TEXT
+# ====================================
 df["combined_text"] = (
     df[search_columns]
     .fillna("")
@@ -54,32 +96,54 @@ df["combined_text"] = (
     .agg(" ".join, axis=1)
 )
 
-# Search bar
-query = st.text_input(
+# ====================================
+# SIDEBAR SEARCH
+# ====================================
+st.sidebar.header("Search & Filter")
+
+query = st.sidebar.text_input(
     "Search expertise or research interests"
 )
 
-# Department filter
-departments = (
-    df["Department "]
-    .dropna()
-    .unique()
-)
+# ====================================
+# DEPARTMENT FILTER
+# ====================================
+if "department" in df.columns:
 
-selected_department = st.selectbox(
-    "Filter by Department",
-    ["All"] + list(departments)
-)
+    departments = sorted(
+        df["department"]
+        .dropna()
+        .unique()
+    )
 
-# Filtering
+    selected_department = st.sidebar.selectbox(
+        "Filter by Department",
+        ["All"] + list(departments)
+    )
+
+else:
+
+    selected_department = "All"
+
+# ====================================
+# FILTERING
+# ====================================
 filtered_df = df.copy()
 
-if selected_department != "All":
+# Department filtering
+if (
+    selected_department != "All"
+    and "department" in filtered_df.columns
+):
+
     filtered_df = filtered_df[
-        filtered_df["Department "] == selected_department
+        filtered_df["department"]
+        == selected_department
     ]
 
+# Search filtering
 if query:
+
     filtered_df = filtered_df[
         filtered_df["combined_text"]
         .str.contains(
@@ -89,52 +153,111 @@ if query:
         )
     ]
 
-# Results
+# ====================================
+# RESULTS
+# ====================================
 st.subheader(
     f"Found {len(filtered_df)} supervisors"
 )
 
+# ====================================
+# DISPLAY SUPERVISORS
+# ====================================
 for _, row in filtered_df.iterrows():
 
     with st.container(border=True):
 
-        st.markdown(f"## {row['Name:']}")
+        # ----------------------------
+        # NAME
+        # ----------------------------
+        if "name:" in row.index:
 
-        st.write(
-            f"**Department:** {row['Department ']}"
-        )
+            st.markdown(
+                f"## {row['name:']}"
+            )
 
+        # ----------------------------
+        # DEPARTMENT
+        # ----------------------------
+        if "department" in row.index:
+
+            st.write(
+                f"**Department:** {row['department']}"
+            )
+
+        # ----------------------------
+        # EXPERTISE
+        # ----------------------------
         expertise = []
 
         for i in range(1, 6):
 
-            col = (
-                f'Expertise {i}'
-                if i > 1
-                else 'Expertise 1 '
+            col = f"expertise_{i}"
+
+            if (
+                col in row.index
+                and pd.notna(row[col])
+            ):
+
+                expertise.append(
+                    str(row[col])
+                )
+
+        st.write("### Expertise")
+
+        if expertise:
+
+            st.write(
+                ", ".join(expertise)
             )
 
-            if col in row and pd.notna(row[col]):
-                expertise.append(row[col])
+        else:
 
+            st.write(
+                "No expertise information available."
+            )
+
+        # ----------------------------
+        # RESEARCH INTERESTS
+        # ----------------------------
         interests = []
 
         for i in range(1, 6):
 
-            col = f'Interest {i}'
+            col = f"interest_{i}"
 
-            if col in row and pd.notna(row[col]):
-                interests.append(row[col])
+            if (
+                col in row.index
+                and pd.notna(row[col])
+            ):
 
-        st.write("### Expertise")
-        st.write(", ".join(expertise))
+                interests.append(
+                    str(row[col])
+                )
 
         st.write("### Research Interests")
-        st.write(", ".join(interests))
 
-        if pd.notna(row["Supervisor directory"]):
+        if interests:
 
-            st.link_button(
-                "View IIUM Directory",
-                row["Supervisor directory"]
+            st.write(
+                ", ".join(interests)
             )
+
+        else:
+
+            st.write(
+                "No research interest information available."
+            )
+
+        # ----------------------------
+        # IIUM DIRECTORY LINK
+        # ----------------------------
+        if "supervisor_directory" in row.index:
+
+            if pd.notna(row["supervisor_directory"]):
+
+                st.link_button(
+                    "View IIUM Directory",
+                    row["supervisor_directory"]
+                )
+```
