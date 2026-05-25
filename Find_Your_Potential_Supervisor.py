@@ -132,27 +132,45 @@ for idx, row in df.iterrows():
     # ----------------------------------------------
     # SUPERVISOR_NAME
     # ----------------------------------------------
-    if "supervisor_name" in df.columns:
+    if "supervisor_name:" in df.columns:
 
         secondary_name = str(
-            row["supervisor_name"]
+            row["supervisor_name:"]
         ).strip()
 
-    # Remove nan
-    if primary_name.lower() == "nan":
+    # ----------------------------------------------
+    # CLEAN VALUES
+    # ----------------------------------------------
+    invalid_values = [
+        "",
+        "nan",
+        "none"
+    ]
+
+    if primary_name.lower() in invalid_values:
+
         primary_name = ""
 
-    if secondary_name.lower() == "nan":
+    if secondary_name.lower() in invalid_values:
+
         secondary_name = ""
 
-    # Priority
+    # ----------------------------------------------
+    # PRIORITY
+    # ----------------------------------------------
     if primary_name != "":
 
-        df.at[idx, "final_name"] = primary_name
+        final_name = primary_name
 
     elif secondary_name != "":
 
-        df.at[idx, "final_name"] = secondary_name
+        final_name = secondary_name
+
+    else:
+
+        final_name = ""
+
+    df.at[idx, "final_name"] = final_name
 
 # Remove empty names
 df = df[
