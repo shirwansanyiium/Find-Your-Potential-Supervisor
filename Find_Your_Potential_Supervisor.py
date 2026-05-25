@@ -1,10 +1,10 @@
-```python id="ps4y8m"
 import streamlit as st
 import pandas as pd
 
 # ====================================
 # PAGE CONFIGURATION
 # ====================================
+
 st.set_page_config(
     page_title="Find Your Potential INHART Supervisor",
     layout="wide"
