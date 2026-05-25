@@ -10,7 +10,7 @@ st.set_page_config(
 # Load data
 @st.cache_data
 def load_data():
-    df = pd.read_csv("Staff Areas of Expertise and Interest Survey (Responses).csv")
+    df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQYlWSjqnOMP4TjrMBhMeKKluptH6qUzXKt9FIe7U_bi-onh70Fp55n1jcuMWSNlHChzW0OkybKgjkP/pub?output=csv")
     return df
 
 df = load_data()
