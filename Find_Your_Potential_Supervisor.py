@@ -1,17 +1,3 @@
-Here is the FULL UPDATED code with ALL fixes integrated together:
-• Google Sheets loading
-• duplicate supervisor merging
-• `name:` + `supervisor_name` support
-• remove `nan`
-• combine repeated expertise/interests
-• safer loading
-• cleaner display
-• sidebar filtering
-• IIUM directory button support
-
-
-
-```python
 import streamlit as st
 import pandas as pd
 
@@ -473,4 +459,3 @@ for _, row in filtered_df.iterrows():
                 "View IIUM Directory",
                 row["supervisor_directory"]
             )
-```
