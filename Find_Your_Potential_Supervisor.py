@@ -315,75 +315,74 @@ for _, row in filtered_df.iterrows():
             f"**Department:** {row['department']}"
         )
 
-            # ==========================================
-            # EXPERTISE
-            # ==========================================
-            expertise = []
-            
-            for col in row.index:
-            
-                if "expertise_" in col:
-            
-                    value = str(row[col]).strip()
-            
-                    if (
-                        value != ""
-                        and value.lower() != "nan"
-                    ):
-            
-                        expertise.append(value)
-            
-            # Remove duplicates
-            expertise = list(dict.fromkeys(expertise))
-            
-            st.write("### Expertise")
-            
-            if len(expertise) > 0:
-            
-                st.write(
-                    ", ".join(expertise)
-                )
-            
-            else:
-            
-                st.write(
-                    "No expertise information available."
-                )
+        # ==========================================
+        # EXPERTISE
+        # ==========================================
+        expertise = []
 
-            # ==========================================
-            # RESEARCH INTERESTS
-            # ==========================================
-            interests = []
-            
-            for col in row.index:
-            
-                if "interest_" in col:
-            
-                    value = str(row[col]).strip()
-            
-                    if (
-                        value != ""
-                        and value.lower() != "nan"
-                    ):
-            
-                        interests.append(value)
-            
-            # Remove duplicates
-            interests = list(dict.fromkeys(interests))
-            
-            st.write("### Research Interests")
-            
-            if len(interests) > 0:
-            
-                st.write(
-                    ", ".join(interests)
-                )
-            
-            else:
-            
-                st.write(
-                    "No research interest information available."
-                )
+        for col in row.index:
+
+            if "expertise_" in col:
+
+                value = str(row[col]).strip()
+
+                if (
+                    value != ""
+                    and value.lower() != "nan"
+                ):
+
+                    expertise.append(value)
+
+        # Remove duplicates
+        expertise = list(dict.fromkeys(expertise))
+
+        st.write("### Expertise")
+
+        if len(expertise) > 0:
+
+            st.write(
+                ", ".join(expertise)
+            )
+
+        else:
+
+            st.write(
+                "No expertise information available."
+            )
+        # ==========================================
+        # RESEARCH INTERESTS
+        # ==========================================
+        interests = []
+
+        for col in row.index:
+
+            if "interest_" in col:
+
+                value = str(row[col]).strip()
+
+                if (
+                    value != ""
+                    and value.lower() != "nan"
+                ):
+
+                    interests.append(value)
+
+        # Remove duplicates
+        interests = list(dict.fromkeys(interests))
+
+        st.write("### Research Interests")
+
+        if len(interests) > 0:
+
+            st.write(
+                ", ".join(interests)
+            )
+
+        else:
+
+            st.write(
+                "No research interest information available."
+            )
         # ==========================================
         # IIUM DIRECTORY
         # ==========================================
