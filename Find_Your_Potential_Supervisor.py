@@ -146,7 +146,6 @@ df["final_name"] = ""
 for idx, row in df.iterrows():
 
     primary_name = ""
-
     secondary_name = ""
 
     # ----------------------------------------------
@@ -155,7 +154,7 @@ for idx, row in df.iterrows():
     if "name:" in df.columns:
 
         primary_name = str(
-            row["name:"]
+            row.get("name:", "")
         ).strip()
 
     # ----------------------------------------------
@@ -164,11 +163,11 @@ for idx, row in df.iterrows():
     if "supervisor_name:" in df.columns:
 
         secondary_name = str(
-            row["supervisor_name:"]
+            row.get("supervisor_name:", "")
         ).strip()
 
     # ----------------------------------------------
-    # CLEAN VALUES
+    # CLEAN INVALID VALUES
     # ----------------------------------------------
     invalid_values = [
         "",
@@ -177,16 +176,16 @@ for idx, row in df.iterrows():
     ]
 
     if primary_name.lower() in invalid_values:
-
         primary_name = ""
 
     if secondary_name.lower() in invalid_values:
-
         secondary_name = ""
 
     # ----------------------------------------------
     # PRIORITY
     # ----------------------------------------------
+    final_name = ""
+
     if primary_name != "":
 
         final_name = primary_name
@@ -195,15 +194,14 @@ for idx, row in df.iterrows():
 
         final_name = secondary_name
 
-    else:
-
-        final_name = ""
-
+    # ----------------------------------------------
+    # SAVE
+    # ----------------------------------------------
     df.at[idx, "final_name"] = final_name
 
 # Remove empty names
 df = df[
-    df["final_name"].str.strip() != ""
+    df["final_name"].astype(str).str.strip() != ""
 ]
 
 # ==================================================
