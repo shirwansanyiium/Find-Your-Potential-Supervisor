@@ -403,15 +403,23 @@ if selected_department != "All":
         == selected_department
     ]
 
-# Search filter
+# ==================================================
+# SEARCH FILTER
+# ==================================================
 if query:
+
+    query = query.strip().lower()
 
     filtered_df = filtered_df[
         filtered_df["combined_text"]
+        .astype(str)
+        .str.lower()
+        .str.replace("\n", " ")
+        .str.replace("\r", " ")
         .str.contains(
             query,
-            case=False,
-            na=False
+            na=False,
+            regex=False
         )
     ]
 
