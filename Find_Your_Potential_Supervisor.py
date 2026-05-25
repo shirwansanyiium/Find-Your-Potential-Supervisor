@@ -20,7 +20,7 @@ st.markdown(
 
 st.link_button(
     "Fill Up Supervisor Expertise Form",
-    "https://docs.google.com/forms/d/148KXHWU2hAPn9BekIg58ojnNVTDr2cmKFBp8hqxgHSE/edit?ts=69e5c91a"
+    "https://docs.google.com/forms/d/e/1FAIpQLSf4yW4mbvcU7wEkNtR5NzINus-WCWnBhhK-2YH-fV85D_E7Mg/viewform?usp=preview"
 )
 
 st.markdown("---")
