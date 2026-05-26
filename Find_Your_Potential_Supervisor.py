@@ -24,6 +24,15 @@ def load_data():
 df = load_data()
 
 # ==================================================
+# REFRESH DATABASE BUTTON
+# ==================================================
+if st.button("Refresh Supervisor Database"):
+
+    st.cache_data.clear()
+
+    st.rerun()
+
+# ==================================================
 # CLEAN COLUMN NAMES
 # ==================================================
 df.columns = (
@@ -65,6 +74,23 @@ for idx, row in df.iterrows():
 
                 final_name = value
                 break
+
+    # ==========================================
+    # STANDARDISE NAMES
+    # ==========================================
+    final_name = (
+        final_name
+        .replace(" Abd ", " Abdul ")
+        .replace(" abd ", " abdul ")
+        .replace(" Binti ", " ")
+        .replace(" Bin ", " ")
+        .replace(".", "")
+        .strip()
+    )
+
+    final_name = " ".join(
+        final_name.split()
+    )
 
     df.at[idx, "final_name"] = final_name
 
@@ -165,6 +191,12 @@ for supervisor_name in df["final_name"].unique():
             .unique()
         )
 
+        dept_values = [
+            x.strip()
+            for x in dept_values
+            if x.strip() != ""
+        ]
+
         supervisor_dict["department"] = ", ".join(dept_values)
 
     else:
@@ -183,17 +215,30 @@ for supervisor_name in df["final_name"].unique():
             .unique()
         )
 
+        directory_values = [
+            x.strip()
+            for x in directory_values
+            if x.strip() != ""
+            and x.lower() != "nan"
+        ]
+
         if len(directory_values) > 0:
 
-            supervisor_dict["supervisor_directory"] = directory_values[0]
+            supervisor_dict[
+                "supervisor_directory"
+            ] = directory_values[0]
 
         else:
 
-            supervisor_dict["supervisor_directory"] = ""
+            supervisor_dict[
+                "supervisor_directory"
+            ] = ""
 
     else:
 
-        supervisor_dict["supervisor_directory"] = ""
+        supervisor_dict[
+            "supervisor_directory"
+        ] = ""
 
     # ==========================================
     # COMBINE EXPERTISE
@@ -213,7 +258,12 @@ for supervisor_name in df["final_name"].unique():
 
             for value in values:
 
-                cleaned_value = value.strip()
+                cleaned_value = (
+                    value
+                    .strip()
+                    .replace("\n", " ")
+                    .replace("\r", " ")
+                )
 
                 if (
                     cleaned_value != ""
@@ -253,7 +303,12 @@ for supervisor_name in df["final_name"].unique():
 
             for value in values:
 
-                cleaned_value = value.strip()
+                cleaned_value = (
+                    value
+                    .strip()
+                    .replace("\n", " ")
+                    .replace("\r", " ")
+                )
 
                 if (
                     cleaned_value != ""
