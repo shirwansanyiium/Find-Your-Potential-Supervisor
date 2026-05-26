@@ -24,7 +24,7 @@ def load_data():
 df = load_data()
 
 # ==================================================
-# REFRESH DATABASE BUTTON
+# REFRESH BUTTON
 # ==================================================
 if st.button("Refresh Supervisor Database"):
 
@@ -43,20 +43,20 @@ df.columns = (
 )
 
 # ==================================================
-# CREATE FINAL NAME COLUMN
+# CREATE FINAL NAME
 # ==================================================
 df["final_name"] = ""
+
+possible_name_columns = [
+    "name:",
+    "name",
+    "supervisor_name:",
+    "supervisor_name"
+]
 
 for idx, row in df.iterrows():
 
     final_name = ""
-
-    possible_name_columns = [
-        "name:",
-        "name",
-        "supervisor_name:",
-        "supervisor_name"
-    ]
 
     for col in possible_name_columns:
 
@@ -75,15 +75,8 @@ for idx, row in df.iterrows():
                 final_name = value
                 break
 
-    # ==========================================
-    # STANDARDISE NAMES
-    # ==========================================
     final_name = (
         final_name
-        .replace(" Abd ", " Abdul ")
-        .replace(" abd ", " abdul ")
-        .replace(" Binti ", " ")
-        .replace(" Bin ", " ")
         .replace(".", "")
         .strip()
     )
@@ -116,7 +109,7 @@ for col in df.columns:
         break
 
 # ==================================================
-# CLEAN DEPARTMENT VALUES
+# CLEAN DEPARTMENT
 # ==================================================
 if department_column != "":
 
@@ -135,12 +128,7 @@ directory_column = ""
 
 for col in df.columns:
 
-    clean_col = col.lower().strip()
-
-    if (
-        "directory" in clean_col
-        or "staff_directory" in clean_col
-    ):
+    if "directory" in col:
 
         directory_column = col
         break
@@ -201,16 +189,22 @@ for supervisor_name in df["final_name"].unique():
             supervisor_rows[department_column]
             .dropna()
             .astype(str)
-            .unique()
+            .str.strip()
         )
 
         dept_values = [
-            x.strip()
-            for x in dept_values
-            if x.strip() != ""
+            x for x in dept_values
+            if x != ""
+            and x.lower() != "nan"
         ]
 
-        supervisor_dict["department"] = ", ".join(dept_values)
+        if len(dept_values) > 0:
+
+            supervisor_dict["department"] = dept_values[0]
+
+        else:
+
+            supervisor_dict["department"] = ""
 
     else:
 
@@ -225,13 +219,12 @@ for supervisor_name in df["final_name"].unique():
             supervisor_rows[directory_column]
             .dropna()
             .astype(str)
-            .unique()
+            .str.strip()
         )
 
         directory_values = [
-            x.strip()
-            for x in directory_values
-            if x.strip() != ""
+            x for x in directory_values
+            if x != ""
             and x.lower() != "nan"
         ]
 
@@ -254,43 +247,46 @@ for supervisor_name in df["final_name"].unique():
         ] = ""
 
     # ==========================================
-    # COMBINE EXPERTISE
+    # EXPERTISE
     # ==========================================
-    all_expertise = []
+    expertise_set = set()
 
     for col in valid_expertise_columns:
 
-        if col in supervisor_rows.columns:
+        values = (
+            supervisor_rows[col]
+            .dropna()
+            .astype(str)
+            .tolist()
+        )
 
-            values = (
-                supervisor_rows[col]
-                .dropna()
-                .astype(str)
-                .tolist()
-            )
+        for value in values:
 
-            for value in values:
+            split_values = value.split(",")
 
-                cleaned_value = (
-                    value
+            for item in split_values:
+
+                cleaned_item = (
+                    item
                     .strip()
                     .replace("\n", " ")
                     .replace("\r", " ")
                 )
 
+                cleaned_lower = cleaned_item.lower()
+
                 if (
-                    cleaned_value != ""
-                    and cleaned_value.lower() != "nan"
-                    and "basic expertise" not in cleaned_value.lower()
-                    and "intermediate expertise" not in cleaned_value.lower()
-                    and "advanced expertise" not in cleaned_value.lower()
+                    cleaned_item != ""
+                    and cleaned_lower != "nan"
+                    and "basic expertise" not in cleaned_lower
+                    and "intermediate expertise" not in cleaned_lower
+                    and "advanced expertise" not in cleaned_lower
+                    and "expert" != cleaned_lower
                 ):
 
-                    all_expertise.append(cleaned_value)
+                    expertise_set.add(cleaned_item)
 
-    all_expertise = list(
-        dict.fromkeys(all_expertise)
-    )
+    all_expertise = sorted(expertise_set)
 
     for i, value in enumerate(all_expertise):
 
@@ -299,44 +295,46 @@ for supervisor_name in df["final_name"].unique():
         ] = value
 
     # ==========================================
-    # COMBINE INTERESTS
+    # INTERESTS
     # ==========================================
-    all_interests = []
+    interest_set = set()
 
     for col in valid_interest_columns:
 
-        if col in supervisor_rows.columns:
+        values = (
+            supervisor_rows[col]
+            .dropna()
+            .astype(str)
+            .tolist()
+        )
 
-            values = (
-                supervisor_rows[col]
-                .dropna()
-                .astype(str)
-                .tolist()
-            )
+        for value in values:
 
-            for value in values:
+            split_values = value.split(",")
 
-                cleaned_value = (
-                    value
+            for item in split_values:
+
+                cleaned_item = (
+                    item
                     .strip()
                     .replace("\n", " ")
                     .replace("\r", " ")
                 )
 
+                cleaned_lower = cleaned_item.lower()
+
                 if (
-                    cleaned_value != ""
-                    and cleaned_value.lower() != "nan"
-                    and "very interested" not in cleaned_value.lower()
-                    and "extremely interested" not in cleaned_value.lower()
-                    and "interest_level" not in cleaned_value.lower()
-                    and "likert" not in cleaned_value.lower()
+                    cleaned_item != ""
+                    and cleaned_lower != "nan"
+                    and "very interested" not in cleaned_lower
+                    and "extremely interested" not in cleaned_lower
+                    and "interest_level" not in cleaned_lower
+                    and "likert" not in cleaned_lower
                 ):
 
-                    all_interests.append(cleaned_value)
+                    interest_set.add(cleaned_item)
 
-    all_interests = list(
-        dict.fromkeys(all_interests)
-    )
+    all_interests = sorted(interest_set)
 
     for i, value in enumerate(all_interests):
 
@@ -352,7 +350,7 @@ for supervisor_name in df["final_name"].unique():
 df = pd.DataFrame(grouped_data)
 
 # ==================================================
-# SEARCHABLE COLUMNS
+# SEARCH TEXT
 # ==================================================
 search_columns = []
 
@@ -365,14 +363,12 @@ for col in df.columns:
 
         search_columns.append(col)
 
-# ==================================================
-# CREATE SEARCH TEXT
-# ==================================================
 df["combined_text"] = (
     df[search_columns]
     .fillna("")
     .astype(str)
     .agg(" ".join, axis=1)
+    .str.lower()
 )
 
 # ==================================================
@@ -386,7 +382,7 @@ with st.sidebar:
         "Search expertise or research interests"
     )
 
-    departments = (
+    departments = sorted(
         df["department"]
         .dropna()
         .unique()
@@ -394,7 +390,7 @@ with st.sidebar:
 
     selected_department = st.selectbox(
         "Filter by Department",
-        ["All"] + list(departments)
+        ["All"] + departments
     )
 
 # ==================================================
@@ -446,8 +442,6 @@ if query:
 
     filtered_df = filtered_df[
         filtered_df["combined_text"]
-        .astype(str)
-        .str.lower()
         .str.contains(
             query,
             na=False,
@@ -495,8 +489,6 @@ for _, row in filtered_df.iterrows():
 
                     expertise.append(value)
 
-        expertise = list(dict.fromkeys(expertise))
-
         st.write("### Expertise")
 
         if len(expertise) > 0:
@@ -528,8 +520,6 @@ for _, row in filtered_df.iterrows():
                 ):
 
                     interests.append(value)
-
-        interests = list(dict.fromkeys(interests))
 
         st.write("### Research Interests")
 
