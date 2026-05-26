@@ -175,29 +175,22 @@ for supervisor_name in df["final_name"].unique():
 
         supervisor_dict["department"] = ""
 
-    # ----------------------------------------------
+    # ==========================================
     # DIRECTORY
-    # ----------------------------------------------
-    if directory_column != "":
+    # ==========================================
+    directory_link = str(
+        row.get("supervisor_directory", "")
+    ).strip()
 
-        dir_values = (
-            supervisor_rows[directory_column]
-            .dropna()
-            .astype(str)
-            .unique()
-        )
+    if (
+        directory_link != ""
+    and directory_link.lower() != "nan"
+    ):
 
-        if len(dir_values) > 0:
-
-            supervisor_dict["supervisor_directory"] = dir_values[0]
-
-        else:
-
-            supervisor_dict["supervisor_directory"] = ""
-
-    else:
-
-        supervisor_dict["supervisor_directory"] = ""
+    st.link_button(
+        "View IIUM Staff Directory",
+        directory_link
+    )
 
     # ----------------------------------------------
     # COMBINE EXPERTISE
