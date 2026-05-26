@@ -24,6 +24,10 @@ def load_data():
 
     return df
 
+
+# IMPORTANT
+df = load_data()
+
 # ==================================================
 # REFRESH BUTTON
 # ==================================================
@@ -49,10 +53,10 @@ df.columns = (
 df["final_name"] = ""
 
 possible_name_columns = [
-    "name:",
-    "name",
+    "supervisor_name",
     "supervisor_name:",
-    "supervisor_name"
+    "name",
+    "name:"
 ]
 
 for idx, row in df.iterrows():
@@ -76,6 +80,7 @@ for idx, row in df.iterrows():
                 final_name = value
                 break
 
+    # CLEAN NAME
     final_name = (
         final_name
         .replace(".", "")
@@ -98,7 +103,12 @@ df = df[
 ]
 
 # ==================================================
-# DEPARTMENT COLUMN
+# REMOVE DUPLICATE ROWS
+# ==================================================
+df = df.drop_duplicates()
+
+# ==================================================
+# FIND DEPARTMENT COLUMN
 # ==================================================
 department_column = ""
 
@@ -118,12 +128,10 @@ if department_column != "":
         df[department_column]
         .astype(str)
         .str.strip()
-        .str.replace(",", "")
-        .str.replace(r"\s+", " ", regex=True)
     )
 
 # ==================================================
-# DIRECTORY COLUMN
+# FIND DIRECTORY COLUMN
 # ==================================================
 directory_column = ""
 
@@ -164,11 +172,15 @@ for col in df.columns:
         valid_interest_columns.append(col)
 
 # ==================================================
-# GROUP SAME SUPERVISOR
+# GROUP SUPERVISORS
 # ==================================================
 grouped_data = []
 
-for supervisor_name in df["final_name"].unique():
+unique_supervisors = sorted(
+    df["final_name"].unique()
+)
+
+for supervisor_name in unique_supervisors:
 
     supervisor_rows = df[
         df["final_name"] == supervisor_name
@@ -191,12 +203,14 @@ for supervisor_name in df["final_name"].unique():
             .dropna()
             .astype(str)
             .str.strip()
+            .unique()
+            .tolist()
         )
 
         dept_values = [
             x for x in dept_values
-            if x != ""
-            and x.lower() != "nan"
+            if x.lower() != "nan"
+            and x != ""
         ]
 
         if len(dept_values) > 0:
@@ -221,12 +235,14 @@ for supervisor_name in df["final_name"].unique():
             .dropna()
             .astype(str)
             .str.strip()
+            .unique()
+            .tolist()
         )
 
         directory_values = [
             x for x in directory_values
-            if x != ""
-            and x.lower() != "nan"
+            if x.lower() != "nan"
+            and x != ""
         ]
 
         if len(directory_values) > 0:
@@ -282,7 +298,7 @@ for supervisor_name in df["final_name"].unique():
                     and "basic expertise" not in cleaned_lower
                     and "intermediate expertise" not in cleaned_lower
                     and "advanced expertise" not in cleaned_lower
-                    and "expert" != cleaned_lower
+                    and cleaned_lower != "expert"
                 ):
 
                     expertise_set.add(cleaned_item)
@@ -384,9 +400,14 @@ with st.sidebar:
     )
 
     departments = sorted(
-        df["department"]
-        .dropna()
-        .unique()
+        [
+            x for x in df["department"]
+            .dropna()
+            .unique()
+            .tolist()
+            if x != ""
+            and str(x).lower() != "nan"
+        ]
     )
 
     selected_department = st.selectbox(
