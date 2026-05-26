@@ -116,6 +116,19 @@ for col in df.columns:
         break
 
 # ==================================================
+# CLEAN DEPARTMENT VALUES
+# ==================================================
+if department_column != "":
+
+    df[department_column] = (
+        df[department_column]
+        .astype(str)
+        .str.strip()
+        .str.replace(",", "")
+        .str.replace(r"\s+", " ", regex=True)
+    )
+
+# ==================================================
 # DIRECTORY COLUMN
 # ==================================================
 directory_column = ""
