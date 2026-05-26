@@ -68,7 +68,9 @@ for idx, row in df.iterrows():
 
     df.at[idx, "final_name"] = final_name
 
-# Remove empty names
+# ==================================================
+# REMOVE EMPTY NAMES
+# ==================================================
 df = df[
     df["final_name"]
     .astype(str)
@@ -80,14 +82,9 @@ df = df[
 # ==================================================
 department_column = ""
 
-possible_department_columns = [
-    "department",
-    "department:"
-]
+for col in df.columns:
 
-for col in possible_department_columns:
-
-    if col in df.columns:
+    if "department" in col:
 
         department_column = col
         break
@@ -97,15 +94,14 @@ for col in possible_department_columns:
 # ==================================================
 directory_column = ""
 
-possible_directory_columns = [
-    "supervisor_directory",
-    "supervisor_directory:",
-    "directory"
-]
+for col in df.columns:
 
-for col in possible_directory_columns:
+    clean_col = col.lower().strip()
 
-    if col in df.columns:
+    if (
+        "directory" in clean_col
+        or "staff_directory" in clean_col
+    ):
 
         directory_column = col
         break
@@ -152,14 +148,14 @@ for supervisor_name in df["final_name"].unique():
 
     supervisor_dict = {}
 
-    # ----------------------------------------------
+    # ==========================================
     # NAME
-    # ----------------------------------------------
+    # ==========================================
     supervisor_dict["final_name"] = supervisor_name
 
-    # ----------------------------------------------
+    # ==========================================
     # DEPARTMENT
-    # ----------------------------------------------
+    # ==========================================
     if department_column != "":
 
         dept_values = (
@@ -178,23 +174,30 @@ for supervisor_name in df["final_name"].unique():
     # ==========================================
     # DIRECTORY
     # ==========================================
-    directory_link = str(
-        row.get("supervisor_directory", "")
-    ).strip()
+    if directory_column != "":
 
-    if (
-        directory_link != ""
-    and directory_link.lower() != "nan"
-    ):
+        directory_values = (
+            supervisor_rows[directory_column]
+            .dropna()
+            .astype(str)
+            .unique()
+        )
 
-    st.link_button(
-        "View IIUM Staff Directory",
-        directory_link
-    )
+        if len(directory_values) > 0:
 
-    # ----------------------------------------------
+            supervisor_dict["supervisor_directory"] = directory_values[0]
+
+        else:
+
+            supervisor_dict["supervisor_directory"] = ""
+
+    else:
+
+        supervisor_dict["supervisor_directory"] = ""
+
+    # ==========================================
     # COMBINE EXPERTISE
-    # ----------------------------------------------
+    # ==========================================
     all_expertise = []
 
     for col in valid_expertise_columns:
@@ -232,9 +235,9 @@ for supervisor_name in df["final_name"].unique():
             f"expertise_{i+1}"
         ] = value
 
-    # ----------------------------------------------
+    # ==========================================
     # COMBINE INTERESTS
-    # ----------------------------------------------
+    # ==========================================
     all_interests = []
 
     for col in valid_interest_columns:
@@ -340,7 +343,7 @@ st.write(
 st.markdown("---")
 
 # ==================================================
-# GOOGLE FORM SECTION
+# GOOGLE FORM
 # ==================================================
 st.subheader(
     "Supervisor Information Update"
@@ -362,9 +365,6 @@ st.markdown("---")
 # ==================================================
 filtered_df = df.copy()
 
-# ----------------------------------------------
-# DEPARTMENT FILTER
-# ----------------------------------------------
 if selected_department != "All":
 
     filtered_df = filtered_df[
@@ -372,9 +372,6 @@ if selected_department != "All":
         == selected_department
     ]
 
-# ----------------------------------------------
-# SEARCH FILTER
-# ----------------------------------------------
 if query:
 
     query = query.strip().lower()
@@ -383,8 +380,6 @@ if query:
         filtered_df["combined_text"]
         .astype(str)
         .str.lower()
-        .str.replace("\n", " ")
-        .str.replace("\r", " ")
         .str.contains(
             query,
             na=False,
@@ -400,22 +395,16 @@ st.subheader(
 )
 
 # ==================================================
-# DISPLAY SUPERVISORS
+# DISPLAY RESULTS
 # ==================================================
 for _, row in filtered_df.iterrows():
 
     with st.container(border=True):
 
-        # ==========================================
-        # NAME
-        # ==========================================
         st.markdown(
             f"## {row['final_name']}"
         )
 
-        # ==========================================
-        # DEPARTMENT
-        # ==========================================
         st.write(
             f"**Department:** {row['department']}"
         )
@@ -455,7 +444,7 @@ for _, row in filtered_df.iterrows():
             )
 
         # ==========================================
-        # RESEARCH INTERESTS
+        # INTERESTS
         # ==========================================
         interests = []
 
@@ -489,14 +478,18 @@ for _, row in filtered_df.iterrows():
             )
 
         # ==========================================
-        # DIRECTORY
+        # DIRECTORY BUTTON
         # ==========================================
+        directory_link = str(
+            row.get("supervisor_directory", "")
+        ).strip()
+
         if (
-            "supervisor_directory" in row.index
-            and str(row["supervisor_directory"]).strip() != ""
+            directory_link != ""
+            and directory_link.lower() != "nan"
         ):
 
             st.link_button(
-                "View IIUM Directory",
-                row["supervisor_directory"]
+                "View IIUM Staff Directory",
+                directory_link
             )
