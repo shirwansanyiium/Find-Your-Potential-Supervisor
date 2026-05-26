@@ -15,7 +15,7 @@ st.set_page_config(
 @st.cache_data
 def load_data():
 
-    sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYlWSjqnOMP4TjrMBhMeKKluptH6qUzXKt9FIe7U_bi-onh70Fp55n1jcuMWSNlHChzW0OkybKgjkP/pub?output=csv"
+    sheet_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSA7NbCZlMbzAkbFerQJc5Nqe8iUYc8N7PsoaMWnMsuJS_v8vA3hQtwvEzZMmLRqU7pi1LUPq0cJ8Hh/pub?output=csv"
 
     df = pd.read_csv(sheet_url)
 
