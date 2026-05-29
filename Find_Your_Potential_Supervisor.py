@@ -25,7 +25,6 @@ def load_data():
     return df
 
 
-# IMPORTANT
 df = load_data()
 
 # ==================================================
@@ -80,7 +79,6 @@ for idx, row in df.iterrows():
                 final_name = value
                 break
 
-    # CLEAN NAME
     final_name = (
         final_name
         .replace(".", "")
@@ -415,6 +413,10 @@ with st.sidebar:
         ["All"] + departments
     )
 
+    search_button = st.button(
+        "Search"
+    )
+
 # ==================================================
 # TITLE
 # ==================================================
@@ -458,18 +460,20 @@ if selected_department != "All":
         == selected_department
     ]
 
-if query:
+if search_button:
 
-    query = query.strip().lower()
+    if query:
 
-    filtered_df = filtered_df[
-        filtered_df["combined_text"]
-        .str.contains(
-            query,
-            na=False,
-            regex=False
-        )
-    ]
+        query = query.strip().lower()
+
+        filtered_df = filtered_df[
+            filtered_df["combined_text"]
+            .str.contains(
+                query,
+                na=False,
+                regex=False
+            )
+        ]
 
 # ==================================================
 # RESULTS
